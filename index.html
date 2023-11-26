@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Tabloides</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Regular+Brush+Regular">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #ffff;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: auto;
+            max-width: 780px;
+        }
+
+        @font-face {
+            font-family: 'Regular Brush Regular';
+            src: url('Regular Brush Regular.woff') format('woff');
+        }
+
+        .banner {
+            position: fixed;
+            width: 100%;
+            height: auto;
+        }
+
+        .banner img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        p {
+            font-family: 'Regular Brush Regular';
+            font-size: 50px;
+        }
+
+        #imageResults {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            object-fit: cover;
+        }
+
+        #imageResults img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #caminhoOutrolugar {
+            position: relative;
+            justify-content: center;
+            height: auto;
+            max-height: 100%;
+            font-family: 'Regular Brush Regular';
+            font-size: 20px;
+            color: #f0000f;
+            object-fit: cover;
+            width: auto;
+            background-color: #fff73c;
+            text-align: center;
+            border-radius: 30px;
+            margin-top: 5%;
+            margin-bottom: 10%;
+            align-items: center;
+            margin: 50px;
+        }
+
+        #imagemExibida {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            margin-bottom: 0;
+            margin-top: 0;
+            max-height: 55%;
+            max-width: 50%;
+        }
+
+        .nome-produto {
+            position: relative;
+            font-family: 'Regular Brush Regular';
+            font-size: 35px;
+            color: #000000;
+            margin-top: -10px;
+            margin-bottom: 1%;
+        }
+
+        .unidade-produto {
+            font-family: 'Regular Brush Regular';
+            font-size: 25px;
+            color: #000000;
+            margin-left: 55%;
+        }
+
+        .preco-produto {
+            font-family: 'Regular Brush Regular';
+            font-size: 30px;
+            color: #f0000f;
+            margin-top: 0;
+            margin-bottom: 0;
+            text-align: center
+        }
+
+        .titulo-produto {
+            position: relative;
+            font-family: 'Regular Brush Regular';
+            font-size: 30px;
+            color: #f0000f;
+            margin-top: 0;
+            margin-bottom: 5%;
+            text-align: center
+        }
+    </style>
+</head>
+<body>
+    <p>Editor De Ofertas</p>
+
+        <div id="caminhoOutrolugar">
+            <P class="titulo-produto" contenteditable="true" spellcheck="false">Ofertas do Dia</P>
+            <P class="nome-produto" contenteditable="true" spellcheck="false">Nome do Produto</P>
+            <img id="imagemExibida">
+            <P class="preco-produto" contenteditable="true" spellcheck="false">R$ 1,00</P>
+            <P class="unidade-produto" contenteditable="true" spellcheck="false">Unidade</P>
+        </div>
+
+    <label for="searchInput">Buscar Produtos</label>
+    <input type="text" id="searchInput">
+    <button onclick="searchImages()" style="background-color:#00ff00; font-size: 20px ;white-space: nowrap;">Buscar</button>
+
+    <div id="imageResults"></div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+        import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyBdfTnMFp14f-2-Crp9lb6Wt8GTOYP0K2U",
+          authDomain: "geradortabloides.firebaseapp.com",
+          projectId: "geradortabloides",
+          storageBucket: "geradortabloides.appspot.com",
+          messagingSenderId: "176370349614",
+          appId: "1:176370349614:web:a366e9b6d47acaaf0c51bf",
+          measurementId: "G-0P9C5VVJN6"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
+
+        // Função de busca de imagens
+        window.searchImages = function() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+
+            // Limpar resultados anteriores
+            document.getElementById('imageResults').innerHTML = '';
+
+            // Listar todos os itens no caminho especificado (imagens)
+            const storageRef = ref(storage, 'gs://geradortabloides.appspot.com/produtos');
+            listAll(storageRef)
+                .then((res) => {
+                    res.items.forEach((itemRef) => {
+                        // Pegar a URL de download de cada imagem
+                        getDownloadURL(itemRef)
+                            .then((url) => {
+                                // Exibir imagens correspondentes aos resultados
+                                const imageElement = document.createElement('img');
+                                imageElement.src = url;
+                                imageElement.alt = itemRef.name;
+                                document.getElementById('imageResults').appendChild(imageElement);
+
+                                //Evento de clique na imagem
+                                imageElement.addEventListener('click', () => {
+                                    const caminhoImagemClicada = url;
+
+                                    document.getElementById('imagemExibida').src = caminhoImagemClicada;
+
+                                    console.log('Imagem clicada:', itemRef.name);
+                                });
+                            })
+                            .catch((error) => {
+                                console.error('Erro ao obter URL da imagem:', error);
+                            });
+                    });
+                })
+                .catch((error) => {
+                    console.error('Erro ao listar itens no Storage:', error);
+                });
+
+                function exibirLinkImagem(linkImagem) {
+                    const outroLugarElemento = document.getElementById('caminhoOutrolugarElemento');
+
+                    if (outroLugarElemento) {
+                        outroLugarElemento.textContent = 'Caminho da imagem clicada: ${linkImagem}';
+                    }
+                }
+        }
+                
+    </script>
+</body>
+</html>
