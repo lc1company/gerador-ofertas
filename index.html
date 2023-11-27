@@ -6,10 +6,12 @@
     <meta name="google-adsense-account" content="ca-pub-5812855371679805">
     <title>Gerador de Tabloides</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Regular+Brush+Regular">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
-            background-color: #ffff;
+            background-color: #fff73c;
             align-items: center;
             justify-content: center;
             height: 100vh;
@@ -22,16 +24,21 @@
             src: url('Regular Brush Regular.woff') format('woff');
         }
 
-        .banner {
-            position: fixed;
+        #banner {
+            position: relative;
             width: 100%;
             height: auto;
+            min-height: 75%;
+            background-color: #ff0000;
+            border-radius: 20px;
+            text-align: center;
         }
 
-        .banner img {
+        #banner img {
             width: 100%;
             height: auto;
             object-fit: cover;
+            border-radius: 10px;
         }
 
         p {
@@ -39,47 +46,27 @@
             font-size: 50px;
         }
 
-        #imageResults {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            object-fit: cover;
-        }
-
-        #imageResults img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-        }
-
         #caminhoOutrolugar {
             position: relative;
             justify-content: center;
+            min-height: 75%;
             height: auto;
-            max-height: 100%;
+            max-width: 80%;
+            min-width: 75%;
             font-family: 'Regular Brush Regular';
             font-size: 20px;
             color: #f0000f;
             object-fit: cover;
             width: auto;
-            background-color: #fff73c;
+            background-color: #ffffff;
             text-align: center;
             border-radius: 30px;
-            margin-top: 5%;
-            margin-bottom: 10%;
-            align-items: center;
-            margin: 50px;
-        }
-
-        #imagemExibida {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-            margin-bottom: 0;
             margin-top: 0;
-            max-height: 55%;
-            max-width: 50%;
+            margin-bottom: 0;
+            align-items: center;
+            margin: 100px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .nome-produto {
@@ -116,94 +103,111 @@
             margin-bottom: 5%;
             text-align: center
         }
+
+        #uploadBtn {
+            display: none;
+        }
+
+        #customBtn {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #imagePreview {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            margin-bottom: 0;
+            margin-top: 0;
+            max-height: 50%;
+            max-width: 45%;
+            z-index: 1;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .texto-margem {
+            font-family: 'Regular Brush Regular';
+            font-size: 30px;
+            color: #ff0000;
+        }
+
+        .texto-banner {
+            font-family: 'Regular Brush Regular';
+            font-size: 25px;
+            background-color: #fff73c;
+            color: #f0000f;
+            border-radius: 10px;
+        }
+
     </style>
 </head>
 <body>
     <p>Editor De Ofertas</p>
 
-        <div id="caminhoOutrolugar">
-            <P class="titulo-produto" contenteditable="true" spellcheck="false">Ofertas do Dia</P>
-            <P class="nome-produto" contenteditable="true" spellcheck="false">Nome do Produto</P>
-            <img id="imagemExibida">
-            <P class="preco-produto" contenteditable="true" spellcheck="false">R$ 1,00</P>
-            <P class="unidade-produto" contenteditable="true" spellcheck="false">Unidade</P>
-        </div>
+<div id="banner">
+    <p class="texto-margem">.</p>
+    <div id="caminhoOutrolugar">
+        <p class="texto-banner" contenteditable="true" spellcheck="false">Nome supermecado</p>
+        <p class="titulo-produto" contenteditable="true" spellcheck="false">Oferta do Dia</p>
+        <p class="nome-produto" contenteditable="true" spellcheck="false">Nome do Produto</p>
+        <img id="imagePreview">
+        <p class="preco-produto" contenteditable="true" spellcheck="false">R$ 1,00</p>
+        <p class="unidade-produto" contenteditable="true" spellcheck="false">Unidade</p>
+        <p class="texto-banner" contenteditable="true" spellcheck="false">Oferta Válida Até...</p>
+    </div>
+    <P class="texto-margem">.</P>
+</div>
 
-    <label for="searchInput">Buscar Produtos</label>
-    <input type="text" id="searchInput">
-    <button onclick="searchImages()" style="background-color:#00ff00; font-size: 20px ;white-space: nowrap;">Buscar</button>
+    <button onclick="baixarImagem()" style="background-color:#0000ff; font-size: 20px; margin-top: 20px;">Salvar Oferta</button>
+    <button id="customBtn" onclick="uploadFile()">Escolher Imagem</button>
 
-    <div id="imageResults"></div>
+    <!-- Input do tipo "file" oculto -->
+    <input type="file" id="uploadBtn" style="display:none" onchange="previewImage(this)">
 
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-        import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
+      <!-- Preview da imagem selecionada -->
+    <img id="imagePreview" src="#" alt="Imagem Preview" style="max-width: 100%; max-height: 300px; display:none">
 
-        // Your web app's Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-        const firebaseConfig = {
-          apiKey: "AIzaSyBdfTnMFp14f-2-Crp9lb6Wt8GTOYP0K2U",
-          authDomain: "geradortabloides.firebaseapp.com",
-          projectId: "geradortabloides",
-          storageBucket: "geradortabloides.appspot.com",
-          messagingSenderId: "176370349614",
-          appId: "1:176370349614:web:a366e9b6d47acaaf0c51bf",
-          measurementId: "G-0P9C5VVJN6"
-        };
-      
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const storage = getStorage(app);
+    <script>
 
-        // Função de busca de imagens
-        window.searchImages = function() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-
-            // Limpar resultados anteriores
-            document.getElementById('imageResults').innerHTML = '';
-
-            // Listar todos os itens no caminho especificado (imagens)
-            const storageRef = ref(storage, 'gs://geradortabloides.appspot.com/produtos');
-            listAll(storageRef)
-                .then((res) => {
-                    res.items.forEach((itemRef) => {
-                        // Pegar a URL de download de cada imagem
-                        getDownloadURL(itemRef)
-                            .then((url) => {
-                                // Exibir imagens correspondentes aos resultados
-                                const imageElement = document.createElement('img');
-                                imageElement.src = url;
-                                imageElement.alt = itemRef.name;
-                                document.getElementById('imageResults').appendChild(imageElement);
-
-                                //Evento de clique na imagem
-                                imageElement.addEventListener('click', () => {
-                                    const caminhoImagemClicada = url;
-
-                                    document.getElementById('imagemExibida').src = caminhoImagemClicada;
-
-                                    console.log('Imagem clicada:', itemRef.name);
-                                });
-                            })
-                            .catch((error) => {
-                                console.error('Erro ao obter URL da imagem:', error);
-                            });
-                    });
-                })
-                .catch((error) => {
-                    console.error('Erro ao listar itens no Storage:', error);
-                });
-
-                function exibirLinkImagem(linkImagem) {
-                    const outroLugarElemento = document.getElementById('caminhoOutrolugarElemento');
-
-                    if (outroLugarElemento) {
-                        outroLugarElemento.textContent = 'Caminho da imagem clicada: ${linkImagem}';
-                    }
-                }
+        window.uploadFile = function() {
+            document.getElementById('uploadBtn').click();
         }
-                
+
+        window.previewImage = function(input) {
+            const preview = document.getElementById('imagePreview');
+            const file = input.files[0];
+
+          if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+
+          reader.readAsDataURL(file);
+          }
+        }
+
+        window.baixarImagem = function() {
+            const banner = document.getElementById('banner');
+            const produtoSalvo = document.getElementById('produto-salvo');
+
+            html2canvas(banner, {
+                useCORS: true,
+                logging: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL();
+                link.download = 'imagem.png';
+                link.click();
+            });
+        }
     </script>
 </body>
 </html>
